@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaxAce R&E AI Assistant</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface-alt: #f1efe8;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --text-primary: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-muted: #888780;
+    --accent-bg: #e6f1fb;
+    --accent-text: #185fa5;
+    --accent-border: #85b7eb;
+    --success-bg: #eaf3de;
+    --success-text: #3b6d11;
+    --warning-bg: #faeeda;
+    --warning-text: #854f0b;
+    --danger-bg: #fcebeb;
+    --danger-text: #a32d2d;
+    --teal: #0f6e56;
+    --radius: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --surface: #2c2c2a;
+      --surface-alt: #242422;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+      --text-primary: #e8e6de;
+      --text-secondary: #9c9a92;
+      --text-muted: #5f5e5a;
+      --accent-bg: #0c447c;
+      --accent-text: #b5d4f4;
+      --accent-border: #185fa5;
+      --success-bg: #27500a;
+      --success-text: #c0dd97;
+      --warning-bg: #633806;
+      --warning-text: #fac775;
+      --danger-bg: #791f1f;
+      --danger-text: #f7c1c1;
+      --teal: #5dcaa5;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 2rem;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface-alt);
+    font-size: 14px;
+    color: var(--text-primary);
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent-border);
+  }
+
+  textarea::placeholder { color: var(--text-muted); }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .chip {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-strong);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    background: var(--surface-alt);
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .chip:hover, .chip.active {
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    border-color: var(--accent-border);
+  }
+
+  .chips-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 14px 0 6px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .task-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 10px;
+  }
+
+  .task-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .task-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .tag-fast { background: var(--success-bg); color: var(--success-text); }
+  .tag-review { background: var(--warning-bg); color: var(--warning-text); }
+  .tag-human { background: var(--danger-bg); color: var(--danger-text); }
+
+  .tag-detail {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .tag-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  .open-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface-alt);
+    color: var(--text-primary);
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .open-btn:hover {
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    border-color: var(--accent-border);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .result-banner {
+    background: var(--accent-bg);
+    border: 0.5px solid var(--accent-border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--accent-text);
+    display: none;
+  }
+
+  .result-banner.show { display: block; }
+
+  .section-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    letter-spacing: 0.01em;
+  }
+
+  footer {
+    margin-top: 2rem;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding-bottom: 2rem;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.75rem; }
+    .card, .task-card { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark">TA</div>
+      <h1>R&amp;E AI Assistant</h1>
+    </div>
+    <p class="subtitle">TaxAce Group Inc. · Research &amp; Evaluation Lead</p>
+  </header>
+
+  <div class="card">
+    <label for="task-input">What are you working on today?</label>
+    <textarea id="task-input" rows="2" placeholder="e.g. I need to evaluate a new AI tool for client intake..."></textarea>
+
+    <p class="chips-label">Or pick a common R&amp;E task:</p>
+    <div class="chips" id="chips">
+      <span class="chip" data-task="Evaluate a new AI tool or software">Evaluate a tool</span>
+      <span class="chip" data-task="Run a stack audit and find cost savings">Stack audit</span>
+      <span class="chip" data-task="Research market alternatives to a tool we use">Market research</span>
+      <span class="chip" data-task="Write an evaluation report for leadership">Write a report</span>
+      <span class="chip" data-task="Review and test a prompt before it goes live">Prompt QA</span>
+      <span class="chip" data-task="Track whether an adopted tool is actually being used">Adoption check</span>
+    </div>
+
+    <div class="result-banner" id="result-banner"></div>
+
+    <div style="margin-top:14px;">
+      <a class="open-btn" id="ace-btn" href="https://claude.ai" target="_blank">
+        Open in Ace (Claude) ↗
+      </a>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <p class="section-label">Full R&amp;E task library — how AI can help</p>
+
+  <div class="task-card">
+    <p class="task-title">Tool evaluation</p>
+    <p class="task-desc">Assessing a new AI tool, software, or vendor solution before TaxAce commits.</p>
+    <div class="tags">
+      <div class="tag-row"><span class="tag tag-fast">AI drafts</span><span class="tag-detail">Research brief · Five-lens assessment · Draft report · Gap list</span></div>
+      <div class="tag-row"><span class="tag tag-review">Human reviews</span><span class="tag-detail">Final adopt/improve/reject call · Data privacy sign-off</span></div>
+    </div>
+    <a class="open-btn" href="https://claude.ai/new?q=Help+me+run+a+tool+evaluation+using+the+TaxAce+AI+Tool+Evaluator+specialist.+Walk+me+through+what+I+need+to+provide." target="_blank">Run a tool evaluation ↗</a>
+  </div>
+
+  <div class="task-card">
+    <p class="task-title">Stack audit &amp; cost reduction</p>
+    <p class="task-desc">Reviewing TaxAce's full tool inventory to find waste, overlap, or better options.</p>
+    <div class="tags">
+      <div class="tag-row"><span class="tag tag-fast">AI drafts</span><span class="tag-detail">Enriched inventory · Duplicate map · Savings estimate · Priority action list</span></div>
+      <div class="tag-row"><span class="tag tag-review">Human reviews</span><span class="tag-detail">Locked contracts · Compliance-required tools · Final recommendations to leadership</span></div>
+    </div>
+    <a class="open-btn" href="https://claude.ai/new?q=Help+me+run+the+Stack+Audit+and+Cost+Reduction+workflow.+What+inventory+do+I+need+to+gather+first?" target="_blank">Run a stack audit ↗</a>
+  </div>
+
+  <div class="task-card">
+    <p class="task-title">Market research</p>
+    <p class="task-desc">Finding current pricing, competitor landscape, and vendor context before an evaluation or audit.</p>
+    <div class="tags">
+      <div class="tag-row"><span class="tag tag-fast">AI drafts</span><span class="tag-detail">Competitor landscape · Pricing comparison · Vendor change flags</span></div>
+      <div class="tag-row"><span class="tag tag-review">Human reviews</span><span class="tag-detail">Verify pricing before presenting to leadership</span></div>
+    </div>
+    <a class="open-btn" href="https://claude.ai/new?q=I+need+to+research+market+alternatives+to+a+tool+TaxAce+currently+uses.+Help+me+structure+the+research." target="_blank">Start market research ↗</a>
+  </div>
+
+  <div class="task-card">
+    <p class="task-title">Evaluation report writing</p>
+    <p class="task-desc">Turning raw audit or evaluation findings into a leadership-ready document in TaxAce's voice.</p>
+    <div class="tags">
+      <div class="tag-row"><span class="tag tag-fast">AI drafts</span><span class="tag-detail">Executive summary · Findings write-up · Priority action list</span></div>
+      <div class="tag-row"><span class="tag tag-review">Human reviews</span><span class="tag-detail">Accuracy of all figures · Internal context AI doesn't have</span></div>
+    </div>
+    <a class="open-btn" href="https://claude.ai/new?q=I+have+evaluation+findings+ready.+Help+me+write+a+leadership-ready+report+in+TaxAce+voice." target="_blank">Draft a report ↗</a>
+  </div>
+
+  <div class="task-card">
+    <p class="task-title">Prompt QA review</p>
+    <p class="task-desc">Testing AI prompts for accuracy, guardrail compliance, and hallucination risk before they go live.</p>
+    <div class="tags">
+      <div class="tag-row"><span class="tag tag-fast">AI drafts</span><span class="tag-detail">Red-team questions · Guardrail check · Risk flags with fixes</span></div>
+      <div class="tag-row"><span class="tag tag-human">Human approves</span><span class="tag-detail">Any prompt touching client data or compliance — no exceptions</span></div>
+    </div>
+    <a class="open-btn" href="https://claude.ai/new?q=I+have+a+prompt+I+want+to+QA+before+it+goes+live+at+TaxAce.+Help+me+test+it+against+the+dossier+guardrails." target="_blank">Run a prompt QA ↗</a>
+  </div>
+
+  <div class="task-card">
+    <p class="task-title">Adoption tracking</p>
+    <p class="task-desc">Checking whether tools TaxAce adopted are actually being used and delivering value.</p>
+    <div class="tags">
+      <div class="tag-row"><span class="tag tag-fast">AI drafts</span><span class="tag-detail">Usage question set · Before/after comparison · Next-step recommendations</span></div>
+      <div class="tag-row"><span class="tag tag-review">Human reviews</span><span class="tag-detail">Actual usage data from team · Final keep or cut decision</span></div>
+    </div>
+    <a class="open-btn" href="https://claude.ai/new?q=Help+me+check+whether+a+tool+TaxAce+adopted+is+actually+being+used.+What+questions+should+I+ask+the+team?" target="_blank">Run an adoption check ↗</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="legend">
+    <div class="legend-item"><span class="tag tag-fast">AI drafts</span> AI generates first — fast, complete</div>
+    <div class="legend-item"><span class="tag tag-review">Human reviews</span> You verify before it's final</div>
+    <div class="legend-item"><span class="tag tag-human">Human approves</span> You decide — no exceptions</div>
+  </div>
+
+  <footer>TaxAce Group Inc. · R&amp;E AI Assistant · Built June 2026</footer>
+
+</div>
+
+<script>
+  const prompts = {
+    'Evaluate a new AI tool or software': { text: 'Sounds like a tool evaluation. Use the AI Tool Evaluator specialist — have the tool name, proposed use case, and any pricing or security docs ready.', url: 'Help+me+run+a+tool+evaluation+using+the+TaxAce+AI+Tool+Evaluator+specialist.+Walk+me+through+what+I+need+to+provide.' },
+    'Run a stack audit and find cost savings': { text: 'Run the Stack Audit play. Gather your tool inventory first — name, cost, billing cycle, and which team uses it. Rough notes are fine.', url: 'Help+me+run+the+Stack+Audit+and+Cost+Reduction+workflow.+What+inventory+do+I+need+to+gather+first%3F' },
+    'Research market alternatives to a tool we use': { text: 'Start with the Research Specialist. It enriches your tool data with current pricing and alternatives before any recommendation is made.', url: 'I+need+to+research+market+alternatives+to+a+tool+TaxAce+currently+uses.+Help+me+structure+the+research.' },
+    'Write an evaluation report for leadership': { text: 'Use the Report Writer specialist. Have your raw findings ready — it will shape them into a leadership-ready document in TaxAce voice.', url: 'I+have+evaluation+findings+ready.+Help+me+write+a+leadership-ready+report+in+TaxAce+voice.' },
+    'Review and test a prompt before it goes live': { text: 'Run a Prompt QA. Paste the prompt and Claude will red-team it against TaxAce dossier guardrails. Human approval required before it goes live.', url: 'I+have+a+prompt+I+want+to+QA+before+it+goes+live+at+TaxAce.+Help+me+test+it+against+the+dossier+guardrails.' },
+    'Track whether an adopted tool is actually being used': { text: 'Run an adoption check. Gather actual usage data from the team first — AI will build the question set and comparison template.', url: 'Help+me+check+whether+a+tool+TaxAce+adopted+is+actually+being+used.+What+questions+should+I+ask+the+team%3F' }
+  };
+
+  const banner = document.getElementById('result-banner');
+  const aceBtn = document.getElementById('ace-btn');
+  const input = document.getElementById('task-input');
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const task = chip.dataset.task;
+      input.value = task;
+      const p = prompts[task];
+      if (p) {
+        banner.textContent = p.text;
+        banner.classList.add('show');
+        aceBtn.href = 'https://claude.ai/new?q=' + p.url;
+      }
+    });
+  });
+
+  input.addEventListener('input', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    const val = input.value.trim();
+    if (val.length > 10) {
+      banner.textContent = 'Type your task, then open Ace — paste it in and let the R&E team library guide you to the right specialist.';
+      banner.classList.add('show');
+      const encoded = encodeURIComponent('As Ace, the TaxAce R&E AI assistant: ' + val + ' — what is the best way AI can help me with this task, and which specialist or workflow should I use?');
+      aceBtn.href = 'https://claude.ai/new?q=' + encoded;
+    } else {
+      banner.classList.remove('show');
+      aceBtn.href = 'https://claude.ai';
+    }
+  });
+</script>
+</body>
+</html>
